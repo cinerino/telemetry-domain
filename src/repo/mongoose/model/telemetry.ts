@@ -73,7 +73,6 @@ const schema = new mongoose.Schema(
     }
 );
 
-// 測定データ参照時に使用
 schema.index(
     { 'purpose.typeOf': 1, 'object.scope': 1, 'object.measureDate': 1 },
     {
@@ -82,6 +81,15 @@ schema.index(
             'purpose.typeOf': { $exists: true },
             'object.scope': { $exists: true },
             'object.measureDate': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'object.projectId': 1 },
+    {
+        name: 'searchByObjectProjectId',
+        partialFilterExpression: {
+            'object.projectId': { $exists: true }
         }
     }
 );

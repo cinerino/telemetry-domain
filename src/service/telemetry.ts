@@ -48,6 +48,7 @@ export interface ITelemetry {
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function analyzePlaceOrder(params: {
+    projectId: string;
     transaction: factory.transaction.ITransaction<factory.transactionType.PlaceOrder>;
 }) {
     // tslint:disable-next-line:max-func-body-length
@@ -167,6 +168,7 @@ export function analyzePlaceOrder(params: {
         debug('saving telemetry...', savingTelemetries);
         await Promise.all(savingTelemetries.map(async (telemetry) => {
             await addTelemetry({
+                projectId: params.projectId,
                 telemetryType: telemetry.typeOf,
                 measureFrom: measureFrom,
                 measureThrough: measureThrough,
@@ -178,6 +180,7 @@ export function analyzePlaceOrder(params: {
 export interface ITelemetryValueAsObject { [key: string]: number; }
 export type ITelemetryValue = number | ITelemetryValueAsObject;
 function addTelemetry(params: {
+    projectId: string;
     telemetryType: TelemetryType;
     measureFrom: Date;
     measureThrough: Date;
@@ -219,23 +222,21 @@ function addTelemetry(params: {
             });
         }
 
-        // 日データを初期化
+        const condition: any = {
+            'purpose.typeOf': { $exists: true, $eq: params.telemetryType },
+            'object.projectId': { $exists: true, $eq: params.projectId },
+            'object.scope': { $exists: true, $eq: TelemetryScope.Global },
+            'object.measureDate': { $exists: true, $eq: telemetryMeasureDate }
+        };
+        // 日データなければ初期化
         await repos.telemetry.telemetryModel.findOneAndUpdate(
-            {
-                'purpose.typeOf': params.telemetryType,
-                'object.scope': TelemetryScope.Global,
-                'object.measureDate': telemetryMeasureDate
-            },
+            condition,
             { $setOnInsert: setOnInsert },
             { upsert: true, strict: false }
         ).exec();
-
+        // increment
         await repos.telemetry.telemetryModel.findOneAndUpdate(
-            {
-                'purpose.typeOf': params.telemetryType,
-                'object.scope': TelemetryScope.Global,
-                'object.measureDate': telemetryMeasureDate
-            },
+            condition,
             { $inc: inc },
             { new: true }
         ).exec();
@@ -243,6 +244,7 @@ function addTelemetry(params: {
     };
 }
 export function search(params: {
+    projectId: string;
     telemetryType: string;
     measureFrom: Date;
     measureThrough: Date;
@@ -266,10 +268,11 @@ export function search(params: {
         };
         const telemetries = await repos.telemetry.telemetryModel.find({
             $and: [
-                { 'purpose.typeOf': params.telemetryType },
-                { 'object.scope': params.scope },
-                { 'object.measureDate': { $gte: searchConditions.measureFrom } },
-                { 'object.measureDate': { $lt: searchConditions.measureThrough } }
+                { 'purpose.typeOf': { $exists: true, $eq: params.telemetryType } },
+                { 'object.projectId': { $exists: true, $eq: params.projectId } },
+                { 'object.scope': { $exists: true, $eq: params.scope } },
+                { 'object.measureDate': { $exists: true, $gte: searchConditions.measureFrom } },
+                { 'object.measureDate': { $exists: true, $lt: searchConditions.measureThrough } }
             ]
         }).sort({ 'object.measureDate': 1 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
         const datas: any[] = [];
