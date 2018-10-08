@@ -17,15 +17,46 @@ export type TaskOperation<T> =
     (repos: { task: TaskRepo }) => Promise<T>;
 const debug = createDebug('cinerino-telemetry-domain:service');
 export enum TelemetryType {
+    /**
+     * 売上高
+     */
     SalesAmount = 'SalesAmount',
+    /**
+     * クライアントごとの売上高
+     */
     SalesAmountByClient = 'SalesAmountByClient',
+    /**
+     * 決済方法ごとの売上高
+     */
     SalesAmountByPaymentMethod = 'SalesAmountByPaymentMethod',
+    /**
+     * 販売者ごとの売上高
+     */
     SalesAmountBySeller = 'SalesAmountBySeller',
+    /**
+     * 注文アイテム数
+     */
     NumOrderItems = 'NumOrderItems',
+    /**
+     * クライアントごとの注文アイテム数
+     */
     NumOrderItemsByClient = 'NumOrderItemsByClient',
+    /**
+     * 決済方法ごとの注文アイテム数
+     */
     NumOrderItemsByPaymentMethod = 'NumOrderItemsByPaymentMethod',
+    /**
+     * 販売者ごとの注文アイテム数
+     */
     NumOrderItemsBySeller = 'NumOrderItemsBySeller',
-    NumPlaceOrderByStatus = 'NumPlaceOrderByStatus'
+    /**
+     * 取引ステータスごとの注文取引数
+     */
+    NumPlaceOrderByStatus = 'NumPlaceOrderByStatus',
+    /**
+     * 取引タイプごとの開始取引数
+     */
+    NumStartedTransactionsByType = 'NumStartedTransactionsByType'
 }
 export enum TelemetryScope {
     Global = 'Global'
@@ -59,8 +90,6 @@ export function analyzePlaceOrder(params: {
         if (endDate === undefined) {
             throw new factory.errors.Argument('transaction', 'Not ended yet');
         }
-        const measureFrom = moment(moment(endDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
-        const measureThrough = moment(measureFrom).add(1, 'minute').toDate();
 
         const endedTransactions = [params.transaction];
         debug(endedTransactions.length, 'endedTransactions found');
@@ -83,6 +112,10 @@ export function analyzePlaceOrder(params: {
         const numPlaceOrderByStatus: ITelemetryValueAsObject = {
             [params.transaction.status]: 1
         };
+        const numStartedTransactionsByType: ITelemetryValueAsObject = {
+            [params.transaction.typeOf]: 1
+        };
+
         confirmedTransactions.forEach((t) => {
             const order = (<factory.transaction.placeOrder.IResult>t.result).order;
             const amount = order.price;
@@ -139,26 +172,32 @@ export function analyzePlaceOrder(params: {
         debug('numOrderItemsByPaymentMethod:', numOrderItemsByPaymentMethod);
         debug('numOrderItemsBySeller:', numOrderItemsBySeller);
         debug('numPlaceOrderByStatus:', numPlaceOrderByStatus);
+        debug('numStartedTransactionsByType:', numStartedTransactionsByType);
 
+        const startMeasureDate = moment(moment(params.transaction.startDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
+        const endMeasureDate = moment(moment(endDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
         const savingTelemetries: {
             typeOf: TelemetryType;
             value: ITelemetryValue;
+            measureDate: Date;
         }[] = [
-                { typeOf: TelemetryType.NumPlaceOrderByStatus, value: numPlaceOrderByStatus }
+                { typeOf: TelemetryType.NumPlaceOrderByStatus, value: numPlaceOrderByStatus, measureDate: endMeasureDate },
+                { typeOf: TelemetryType.NumStartedTransactionsByType, value: numStartedTransactionsByType, measureDate: startMeasureDate }
             ];
         switch (params.transaction.status) {
             case factory.transactionStatusType.Canceled:
                 break;
             case factory.transactionStatusType.Confirmed:
                 savingTelemetries.push(
-                    { typeOf: TelemetryType.SalesAmount, value: totalSalesAmount },
-                    { typeOf: TelemetryType.SalesAmountByClient, value: salesAmountByClient },
-                    { typeOf: TelemetryType.SalesAmountByPaymentMethod, value: salesAmountByPaymentMethod },
-                    { typeOf: TelemetryType.SalesAmountBySeller, value: salesAmountBySeller },
-                    { typeOf: TelemetryType.NumOrderItems, value: numOrderItems },
-                    { typeOf: TelemetryType.NumOrderItemsByClient, value: numOrderItemsByClient },
-                    { typeOf: TelemetryType.NumOrderItemsByPaymentMethod, value: numOrderItemsByPaymentMethod },
-                    { typeOf: TelemetryType.NumOrderItemsBySeller, value: numOrderItemsBySeller }
+                    { typeOf: TelemetryType.SalesAmount, value: totalSalesAmount, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.SalesAmountByClient, value: salesAmountByClient, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.SalesAmountByPaymentMethod, value: salesAmountByPaymentMethod, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.SalesAmountBySeller, value: salesAmountBySeller, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.NumOrderItems, value: numOrderItems, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.NumOrderItemsByClient, value: numOrderItemsByClient, measureDate: endMeasureDate },
+                    // tslint:disable-next-line:max-line-length
+                    { typeOf: TelemetryType.NumOrderItemsByPaymentMethod, value: numOrderItemsByPaymentMethod, measureDate: endMeasureDate },
+                    { typeOf: TelemetryType.NumOrderItemsBySeller, value: numOrderItemsBySeller, measureDate: endMeasureDate }
                 );
                 break;
             case factory.transactionStatusType.Expired:
@@ -170,8 +209,7 @@ export function analyzePlaceOrder(params: {
             await addTelemetry({
                 projectId: params.projectId,
                 telemetryType: telemetry.typeOf,
-                measureFrom: measureFrom,
-                measureThrough: measureThrough,
+                measureDate: telemetry.measureDate,
                 value: telemetry.value
             })(repos);
         }));
@@ -182,12 +220,11 @@ export type ITelemetryValue = number | ITelemetryValueAsObject;
 function addTelemetry(params: {
     projectId: string;
     telemetryType: TelemetryType;
-    measureFrom: Date;
-    measureThrough: Date;
+    measureDate: Date;
     value: ITelemetryValue;
 }) {
     return async (repos: { telemetry: TelemetryRepo }) => {
-        const telemetryMeasureDate = moment(moment(params.measureFrom).format('YYYY-MM-DDT00:00:00Z')).toDate();
+        const telemetryMeasureDate = moment(moment(params.measureDate).format('YYYY-MM-DDT00:00:00Z')).toDate();
         const initialValue = (typeof params.value === 'number') ? 0 : {};
         const setOnInsert: any = {
             'result.numSamples': 0,
@@ -203,8 +240,8 @@ function addTelemetry(params: {
             }
         }
 
-        const hour = moment(params.measureFrom).format('H');
-        const min = moment(params.measureFrom).format('m');
+        const hour = moment(params.measureDate).format('H');
+        const min = moment(params.measureDate).format('m');
         const inc = {
             [`result.values.${hour}.numSamples`]: 1,
             'result.numSamples': 1
@@ -240,7 +277,7 @@ function addTelemetry(params: {
             { $inc: inc },
             { new: true }
         ).exec();
-        debug('telemetry saved', params.telemetryType, params.measureFrom);
+        debug('telemetry saved', params.telemetryType, params.measureDate);
     };
 }
 export function search(params: {
