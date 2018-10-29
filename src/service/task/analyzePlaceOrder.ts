@@ -8,7 +8,7 @@ import * as TelemetryService from '../telemetry';
 /**
  * タスク実行関数
  */
-export function call(data: factory.task.IData<factory.taskName.AnalyzePlaceOrder>): IOperation<void> {
+export function call(data: factory.task.IData<any>): IOperation<void> {
     return async (settings: IConnectionSettings) => {
         const telemetryRepo = new TelemetryRepo(settings.connection);
         await TelemetryService.analyzePlaceOrder(data)({

@@ -22,7 +22,7 @@ describe('executeByName()', () => {
     it('未実行タスクが存在すれば、実行されるはず', async () => {
         const task = {
             id: 'id',
-            name: domain.factory.taskName.AnalyzePlaceOrder,
+            name: <any>'analyzePlaceOrder',
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
@@ -41,11 +41,10 @@ describe('executeByName()', () => {
     });
 
     it('未実行タスクが存在しなければ、実行されないはず', async () => {
-        const taskName = domain.factory.taskName.AnalyzePlaceOrder;
+        const taskName = <any>'analyzePlaceOrder';
         const taskRepo = new domain.repository.Task(domain.mongoose.connection);
 
-        sandbox.mock(taskRepo).expects('executeOneByName').once()
-            .withArgs(taskName).rejects(new domain.factory.errors.NotFound('task'));
+        sandbox.mock(taskRepo).expects('executeOneByName').once().withArgs(taskName).resolves(null);
         sandbox.mock(domain.service.task).expects('execute').never();
 
         const result = await domain.service.task.executeByName(taskName)({
@@ -109,7 +108,7 @@ describe('execute()', () => {
     it('存在するタスク名であれば、完了ステータスへ変更されるはず', async () => {
         const task = {
             id: 'id',
-            name: domain.factory.taskName.AnalyzePlaceOrder,
+            name: <any>'analyzePlaceOrder',
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
