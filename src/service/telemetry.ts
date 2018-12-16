@@ -79,7 +79,7 @@ export interface ITelemetry {
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
 export function analyzePlaceOrder(params: {
-    projectId: string;
+    project: { id: string };
     transaction: factory.transaction.ITransaction<factory.transactionType.PlaceOrder>;
 }) {
     // tslint:disable-next-line:max-func-body-length
@@ -207,7 +207,7 @@ export function analyzePlaceOrder(params: {
         debug('saving telemetry...', savingTelemetries);
         await Promise.all(savingTelemetries.map(async (telemetry) => {
             await addTelemetry({
-                projectId: params.projectId,
+                project: params.project,
                 telemetryType: telemetry.typeOf,
                 measureDate: telemetry.measureDate,
                 value: telemetry.value
@@ -218,7 +218,7 @@ export function analyzePlaceOrder(params: {
 export interface ITelemetryValueAsObject { [key: string]: number; }
 export type ITelemetryValue = number | ITelemetryValueAsObject;
 function addTelemetry(params: {
-    projectId: string;
+    project: { id: string };
     telemetryType: TelemetryType;
     measureDate: Date;
     value: ITelemetryValue;
@@ -261,7 +261,7 @@ function addTelemetry(params: {
 
         const condition: any = {
             'purpose.typeOf': { $exists: true, $eq: params.telemetryType },
-            'object.projectId': { $exists: true, $eq: params.projectId },
+            'object.projectId': { $exists: true, $eq: params.project.id },
             'object.scope': { $exists: true, $eq: TelemetryScope.Global },
             'object.measureDate': { $exists: true, $eq: telemetryMeasureDate }
         };

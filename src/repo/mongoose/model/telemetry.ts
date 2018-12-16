@@ -74,12 +74,28 @@ const schema = new mongoose.Schema(
 );
 
 schema.index(
-    { 'purpose.typeOf': 1, 'object.scope': 1, 'object.measureDate': 1 },
+    { 'purpose.typeOf': 1 },
     {
-        name: 'searchByMeasureDate',
+        name: 'searchByPurposeTypeOf',
         partialFilterExpression: {
-            'purpose.typeOf': { $exists: true },
-            'object.scope': { $exists: true },
+            'purpose.typeOf': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'object.scope': 1 },
+    {
+        name: 'searchByObjectScope',
+        partialFilterExpression: {
+            'object.scope': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'object.measureDate': 1 },
+    {
+        name: 'searchByObjectMeasureDate',
+        partialFilterExpression: {
             'object.measureDate': { $exists: true }
         }
     }
@@ -90,6 +106,17 @@ schema.index(
         name: 'searchByObjectProjectId',
         partialFilterExpression: {
             'object.projectId': { $exists: true }
+        }
+    }
+);
+schema.index(
+    { 'purpose.typeOf': 1, 'object.scope': 1, 'object.measureDate': 1 },
+    {
+        name: 'searchByMeasureDate',
+        partialFilterExpression: {
+            'purpose.typeOf': { $exists: true },
+            'object.scope': { $exists: true },
+            'object.measureDate': { $exists: true }
         }
     }
 );
