@@ -9,7 +9,7 @@
     }
   ],
   "dependencies": {
-    "@cinerino/factory": "^1.0.0-alpha.73",
+    "@cinerino/factory": "1.0.0-alpha.73",
     "@motionpicture/gmo-service": "^4.3.0",
     "@sendgrid/mail": "^6.3.1",
     "@types/mongoose": "^5.3.5",
