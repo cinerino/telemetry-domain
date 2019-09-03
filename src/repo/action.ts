@@ -9,7 +9,7 @@ export type IAction<T extends factory.actionType> =
     T extends factory.actionType.AuthorizeAction ? factory.action.authorize.IAction<factory.action.authorize.IAttributes<any, any>> :
     factory.action.IAction<factory.action.IAttributes<T, any, any>>;
 /**
- * アクションリポジトリー
+ * アクションリポジトリ
  */
 export class MongoRepository {
     public readonly actionModel: typeof ActionModel;

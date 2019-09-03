@@ -12,7 +12,7 @@ const sortOrder4executionOfTasks = {
     runsAt: 1 // 実行予定日時の早さ優先
 };
 /**
- * タスクリポジトリー
+ * タスクリポジトリ
  */
 export class MongoRepository {
     public readonly taskModel: typeof taskModel;
@@ -144,7 +144,7 @@ export class MongoRepository {
     public async pushExecutionResultById(
         id: string,
         status: factory.taskStatus,
-        executionResult: factory.taskExecutionResult.IAttributes
+        executionResult: factory.task.IExecutionResult
     ): Promise<void> {
         await this.taskModel.findByIdAndUpdate(
             id,

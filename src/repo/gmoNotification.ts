@@ -4,7 +4,7 @@ import { Connection } from 'mongoose';
 import GMONotificationModel from './mongoose/model/gmoNotification';
 
 /**
- * GMO通知リポジトリー
+ * GMO通知リポジトリ
  */
 export class MongoRepository {
     public readonly gmoNotificationModel: typeof GMONotificationModel;

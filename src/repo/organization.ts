@@ -4,14 +4,14 @@ import organizationModel from './mongoose/model/organization';
 import * as factory from '../factory';
 
 /**
- * 組織リポジトリー
+ * 組織リポジトリ
  */
 export class MongoRepository {
     public readonly organizationModel: typeof organizationModel;
     constructor(connection: Connection) {
         this.organizationModel = connection.model(organizationModel.modelName);
     }
-    public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.organization.movieTheater.ISearchConditions) {
+    public static CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params: factory.seller.ISearchConditions) {
         // MongoDB検索条件
         const andConditions: any[] = [
             {
@@ -37,7 +37,7 @@ export class MongoRepository {
     public async findById<T extends factory.organizationType>(params: {
         typeOf: T;
         id: string;
-    }): Promise<factory.organization.IOrganization<T>> {
+    }): Promise<factory.seller.IOrganization<any>> {
         const doc = await this.organizationModel.findOne({
             typeOf: params.typeOf,
             _id: params.id
@@ -53,9 +53,9 @@ export class MongoRepository {
      */
     public async save<T extends factory.organizationType>(params: {
         id?: string;
-        attributes: factory.organization.IAttributes<T>;
-    }): Promise<factory.organization.IOrganization<T>> {
-        let organization: factory.organization.IOrganization<T>;
+        attributes: factory.seller.IAttributes<T>;
+    }): Promise<factory.seller.IOrganization<any>> {
+        let organization: factory.seller.IOrganization<any>;
         if (params.id === undefined) {
             const doc = await this.organizationModel.create(params.attributes);
             organization = doc.toObject();
@@ -75,7 +75,7 @@ export class MongoRepository {
 
         return organization;
     }
-    public async countMovieTheaters(params: factory.organization.movieTheater.ISearchConditions): Promise<number> {
+    public async countMovieTheaters(params: factory.seller.ISearchConditions): Promise<number> {
         const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
 
         return this.organizationModel.countDocuments(
@@ -87,8 +87,8 @@ export class MongoRepository {
      * 劇場検索
      */
     public async searchMovieTheaters(
-        params: factory.organization.movieTheater.ISearchConditions
-    ): Promise<factory.organization.movieTheater.IOrganization[]> {
+        params: factory.seller.ISearchConditions
+    ): Promise<factory.seller.IOrganization<any>[]> {
         const conditions = MongoRepository.CREATE_MOVIE_THEATER_MONGO_CONDITIONS(params);
         const query = this.organizationModel.find(
             { $and: conditions },
