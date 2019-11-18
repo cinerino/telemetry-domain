@@ -78,20 +78,19 @@ export interface ITelemetry {
  */
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
-export function analyzePlaceOrder(params: {
-    project: { id: string };
-    transaction: factory.transaction.ITransaction<factory.transactionType.PlaceOrder>;
-}) {
+export function analyzePlaceOrder(params: factory.transaction.ITransaction<factory.transactionType.PlaceOrder>) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         telemetry: TelemetryRepo;
     }) => {
-        const endDate = params.transaction.endDate;
+        const transaction = params;
+
+        const endDate = transaction.endDate;
         if (endDate === undefined) {
             throw new factory.errors.Argument('transaction', 'Not ended yet');
         }
 
-        const endedTransactions = [params.transaction];
+        const endedTransactions = [transaction];
         debug(endedTransactions.length, 'endedTransactions found');
         const confirmedTransactions = endedTransactions.filter((t) => t.status === factory.transactionStatusType.Confirmed);
 
@@ -110,10 +109,10 @@ export function analyzePlaceOrder(params: {
         const numOrderItemsByPaymentMethod: ITelemetryValueAsObject = {};
         const numOrderItemsBySeller: ITelemetryValueAsObject = {};
         const numPlaceOrderByStatus: ITelemetryValueAsObject = {
-            [params.transaction.status]: 1
+            [transaction.status]: 1
         };
         const numStartedTransactionsByType: ITelemetryValueAsObject = {
-            [params.transaction.typeOf]: 1
+            [transaction.typeOf]: 1
         };
 
         confirmedTransactions.forEach((t) => {
@@ -122,9 +121,14 @@ export function analyzePlaceOrder(params: {
             const numItems = order.acceptedOffers.length;
 
             // クライアントごとの集計
-            const clientUser = t.object.clientUser;
-            if (clientUser !== undefined) {
-                const clientId = clientUser.client_id;
+            let clientId: string | undefined;
+            if (Array.isArray(t.agent.identifier)) {
+                const clientIdProperty = t.agent.identifier.find((p) => p.name === 'clientId');
+                if (clientIdProperty !== undefined) {
+                    clientId = clientIdProperty.value;
+                }
+            }
+            if (typeof clientId === 'string') {
                 if (salesAmountByClient[clientId] === undefined) {
                     salesAmountByClient[clientId] = 0;
                 }
@@ -174,7 +178,7 @@ export function analyzePlaceOrder(params: {
         debug('numPlaceOrderByStatus:', numPlaceOrderByStatus);
         debug('numStartedTransactionsByType:', numStartedTransactionsByType);
 
-        const startMeasureDate = moment(moment(params.transaction.startDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
+        const startMeasureDate = moment(moment(transaction.startDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
         const endMeasureDate = moment(moment(endDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
         const savingTelemetries: {
             typeOf: TelemetryType;
@@ -184,7 +188,7 @@ export function analyzePlaceOrder(params: {
                 { typeOf: TelemetryType.NumPlaceOrderByStatus, value: numPlaceOrderByStatus, measureDate: endMeasureDate },
                 { typeOf: TelemetryType.NumStartedTransactionsByType, value: numStartedTransactionsByType, measureDate: startMeasureDate }
             ];
-        switch (params.transaction.status) {
+        switch (transaction.status) {
             case factory.transactionStatusType.Canceled:
                 break;
             case factory.transactionStatusType.Confirmed:
@@ -207,7 +211,7 @@ export function analyzePlaceOrder(params: {
         debug('saving telemetry...', savingTelemetries);
         await Promise.all(savingTelemetries.map(async (telemetry) => {
             await addTelemetry({
-                project: params.project,
+                project: transaction.project,
                 telemetryType: telemetry.typeOf,
                 measureDate: telemetry.measureDate,
                 value: telemetry.value

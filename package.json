@@ -9,7 +9,7 @@
     }
   ],
   "dependencies": {
-    "@cinerino/factory": "1.0.0-alpha.163",
+    "@cinerino/factory": "1.0.0-alpha.197",
     "@motionpicture/gmo-service": "^4.3.0",
     "@types/mongoose": "^5.3.5",
     "@types/redis": "^2.8.8",
