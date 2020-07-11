@@ -2,50 +2,17 @@ import * as mongoose from 'mongoose';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
-const purposeSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const objectSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const resultSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-const errorSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * 測定スキーマ
  */
 const schema = new mongoose.Schema(
     {
-        result: resultSchema,
-        error: errorSchema,
-        object: objectSchema,
+        result: mongoose.SchemaTypes.Mixed,
+        error: mongoose.SchemaTypes.Mixed,
+        object: mongoose.SchemaTypes.Mixed,
         startDate: Date,
         endDate: Date,
-        purpose: purposeSchema
+        purpose: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'telemetries',
@@ -121,13 +88,14 @@ schema.index(
     }
 );
 
-export default mongoose.model('Telemetry', schema).on(
-    'index',
-    // tslint:disable-next-line:no-single-line-block-comment
-    /* istanbul ignore next */
-    (error) => {
-        if (error !== undefined) {
-            console.error(error);
+export default mongoose.model('Telemetry', schema)
+    .on(
+        'index',
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore next */
+        (error) => {
+            if (error !== undefined) {
+                console.error(error);
+            }
         }
-    }
-);
+    );

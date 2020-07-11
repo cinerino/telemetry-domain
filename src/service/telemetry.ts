@@ -178,8 +178,12 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
         debug('numPlaceOrderByStatus:', numPlaceOrderByStatus);
         debug('numStartedTransactionsByType:', numStartedTransactionsByType);
 
-        const startMeasureDate = moment(moment(transaction.startDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
-        const endMeasureDate = moment(moment(endDate).format('YYYY-MM-DDTHH:mm:00Z')).toDate();
+        const startMeasureDate = moment(moment(transaction.startDate)
+            .format('YYYY-MM-DDTHH:mm:00Z'))
+            .toDate();
+        const endMeasureDate = moment(moment(endDate)
+            .format('YYYY-MM-DDTHH:mm:00Z'))
+            .toDate();
         const savingTelemetries: {
             typeOf: TelemetryType;
             value: ITelemetryValue;
@@ -228,7 +232,9 @@ function addTelemetry(params: {
     value: ITelemetryValue;
 }) {
     return async (repos: { telemetry: TelemetryRepo }) => {
-        const telemetryMeasureDate = moment(moment(params.measureDate).format('YYYY-MM-DDT00:00:00Z')).toDate();
+        const telemetryMeasureDate = moment(moment(params.measureDate)
+            .format('YYYY-MM-DDT00:00:00Z'))
+            .toDate();
         const initialValue = (typeof params.value === 'number') ? 0 : {};
         const setOnInsert: any = {
             'result.numSamples': 0,
@@ -244,8 +250,10 @@ function addTelemetry(params: {
             }
         }
 
-        const hour = moment(params.measureDate).format('H');
-        const min = moment(params.measureDate).format('m');
+        const hour = moment(params.measureDate)
+            .format('H');
+        const min = moment(params.measureDate)
+            .format('m');
         const inc = {
             [`result.values.${hour}.numSamples`]: 1,
             'result.numSamples': 1
@@ -256,11 +264,12 @@ function addTelemetry(params: {
             inc['result.totalSamples'] = params.value;
         } else {
             const valueAsObject = params.value;
-            Object.keys(valueAsObject).forEach((key) => {
-                inc[`result.values.${hour}.values.${min}.${key}`] = valueAsObject[key];
-                inc[`result.values.${hour}.totalSamples.${key}`] = valueAsObject[key];
-                inc[`result.totalSamples.${key}`] = valueAsObject[key];
-            });
+            Object.keys(valueAsObject)
+                .forEach((key) => {
+                    inc[`result.values.${hour}.values.${min}.${key}`] = valueAsObject[key];
+                    inc[`result.values.${hour}.totalSamples.${key}`] = valueAsObject[key];
+                    inc[`result.totalSamples.${key}`] = valueAsObject[key];
+                });
         }
 
         const condition: any = {
@@ -274,13 +283,15 @@ function addTelemetry(params: {
             condition,
             { $setOnInsert: setOnInsert },
             { upsert: true, strict: false }
-        ).exec();
+        )
+            .exec();
         // increment
         await repos.telemetry.telemetryModel.findOneAndUpdate(
             condition,
             { $inc: inc },
             { new: true }
-        ).exec();
+        )
+            .exec();
         debug('telemetry saved', params.telemetryType, params.measureDate);
     };
 }
@@ -304,8 +315,13 @@ export function search(params: {
         }
 
         const searchConditions = {
-            measureFrom: moment(moment(measureFrom).format('YYYY-MM-DDT00:00:00Z')).toDate(),
-            measureThrough: moment(moment(measureThrough).add(1, 'day').format('YYYY-MM-DDT00:00:00Z')).toDate()
+            measureFrom: moment(moment(measureFrom)
+                .format('YYYY-MM-DDT00:00:00Z'))
+                .toDate(),
+            measureThrough: moment(moment(measureThrough)
+                .add(1, 'day')
+                .format('YYYY-MM-DDT00:00:00Z'))
+                .toDate()
         };
         const telemetries = await repos.telemetry.telemetryModel.find({
             $and: [
@@ -315,30 +331,40 @@ export function search(params: {
                 { 'object.measureDate': { $exists: true, $gte: searchConditions.measureFrom } },
                 { 'object.measureDate': { $exists: true, $lt: searchConditions.measureThrough } }
             ]
-        }).sort({ 'object.measureDate': 1 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        })
+            .sort({ 'object.measureDate': 1 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
         const datas: any[] = [];
         switch (resolution) {
             case '1hour':
                 telemetries.forEach((telemetry) => {
-                    Object.keys(telemetry.result.values).forEach((h) => {
-                        datas.push({
-                            measureDate: moment(telemetry.object.measureDate).add(Number(h), 'hours').toDate(),
-                            value: telemetry.result.values[h].totalSamples
+                    Object.keys(telemetry.result.values)
+                        .forEach((h) => {
+                            datas.push({
+                                measureDate: moment(telemetry.object.measureDate)
+                                    .add(Number(h), 'hours')
+                                    .toDate(),
+                                value: telemetry.result.values[h].totalSamples
+                            });
                         });
-                    });
                 });
                 break;
             case '1min':
                 telemetries.forEach((telemetry) => {
-                    Object.keys(telemetry.result.values).forEach((h) => {
-                        Object.keys(telemetry.result.values[h].values).forEach((m) => {
-                            datas.push({
-                                measureDate: moment(telemetry.object.measureDate)
-                                    .add(Number(h), 'hours').add(Number(m), 'minutes').toDate(),
-                                value: telemetry.result.values[h].values[m]
-                            });
+                    Object.keys(telemetry.result.values)
+                        .forEach((h) => {
+                            Object.keys(telemetry.result.values[h].values)
+                                .forEach((m) => {
+                                    datas.push({
+                                        measureDate: moment(telemetry.object.measureDate)
+                                            .add(Number(h), 'hours')
+                                            .add(Number(m), 'minutes')
+                                            .toDate(),
+                                        value: telemetry.result.values[h].values[m]
+                                    });
+                                });
                         });
-                    });
                 });
                 break;
             default:

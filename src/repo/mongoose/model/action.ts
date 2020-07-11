@@ -2,78 +2,6 @@ import * as mongoose from 'mongoose';
 
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
 
-const agentSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const recipientSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const resultSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const errorSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const objectSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const purposeSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const potentialActionsSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const locationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
 /**
  * アクションスキーマ
  */
@@ -81,18 +9,18 @@ const schema = new mongoose.Schema(
     {
         actionStatus: String,
         typeOf: String,
-        agent: agentSchema,
-        recipient: recipientSchema,
-        result: resultSchema,
-        error: errorSchema,
-        object: objectSchema,
+        agent: mongoose.SchemaTypes.Mixed,
+        recipient: mongoose.SchemaTypes.Mixed,
+        result: mongoose.SchemaTypes.Mixed,
+        error: mongoose.SchemaTypes.Mixed,
+        object: mongoose.SchemaTypes.Mixed,
         startDate: Date,
         endDate: Date,
-        purpose: purposeSchema,
-        potentialActions: potentialActionsSchema,
-        amount: Number,
-        fromLocation: locationSchema,
-        toLocation: locationSchema
+        purpose: mongoose.SchemaTypes.Mixed,
+        potentialActions: mongoose.SchemaTypes.Mixed,
+        amount: mongoose.SchemaTypes.Mixed,
+        fromLocation: mongoose.SchemaTypes.Mixed,
+        toLocation: mongoose.SchemaTypes.Mixed
     },
     {
         collection: 'actions',
@@ -144,13 +72,14 @@ schema.index(
     { typeOf: 1, 'object.typeOf': 1, startDate: 1 }
 );
 
-export default mongoose.model('Action', schema).on(
-    'index',
-    // tslint:disable-next-line:no-single-line-block-comment
-    /* istanbul ignore next */
-    (error) => {
-        if (error !== undefined) {
-            console.error(error);
+export default mongoose.model('Action', schema)
+    .on(
+        'index',
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore next */
+        (error) => {
+            if (error !== undefined) {
+                console.error(error);
+            }
         }
-    }
-);
+    );

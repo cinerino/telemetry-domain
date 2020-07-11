@@ -32,7 +32,7 @@ export class MongoRepository {
         return andConditions;
     }
     /**
-     * IDで組織を取得する
+     * 組織を取得する
      */
     public async findById<T extends factory.organizationType>(params: {
         typeOf: T;
@@ -41,7 +41,8 @@ export class MongoRepository {
         const doc = await this.organizationModel.findOne({
             typeOf: params.typeOf,
             _id: params.id
-        }).exec();
+        })
+            .exec();
         if (doc === null) {
             throw new factory.errors.NotFound('Organization');
         }
@@ -66,7 +67,8 @@ export class MongoRepository {
                 },
                 params.attributes,
                 { upsert: false, new: true }
-            ).exec();
+            )
+                .exec();
             if (doc === null) {
                 throw new factory.errors.NotFound('Organization');
             }
@@ -80,7 +82,8 @@ export class MongoRepository {
 
         return this.organizationModel.countDocuments(
             { $and: conditions }
-        ).setOptions({ maxTimeMS: 10000 })
+        )
+            .setOptions({ maxTimeMS: 10000 })
             .exec();
     }
     /**
@@ -103,7 +106,8 @@ export class MongoRepository {
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
         if (params.limit !== undefined && params.page !== undefined) {
-            query.limit(params.limit).skip(params.limit * (params.page - 1));
+            query.limit(params.limit)
+                .skip(params.limit * (params.page - 1));
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
@@ -111,7 +115,9 @@ export class MongoRepository {
             query.sort(params.sort);
         }
 
-        return query.setOptions({ maxTimeMS: 10000 }).exec().then((docs) => docs.map((doc) => doc.toObject()));
+        return query.setOptions({ maxTimeMS: 10000 })
+            .exec()
+            .then((docs) => docs.map((doc) => doc.toObject()));
     }
     /**
      * 組織を削除する
@@ -125,6 +131,7 @@ export class MongoRepository {
                 _id: params.id,
                 typeOf: params.typeOf
             }
-        ).exec();
+        )
+            .exec();
     }
 }

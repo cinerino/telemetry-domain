@@ -3,11 +3,8 @@
  */
 import { OK } from 'http-status';
 import * as request from 'request';
-import * as validator from 'validator';
 
 import { credentials } from '../credentials';
-
-import * as factory from '../factory';
 
 export type Operation<T> = () => Promise<T>;
 
@@ -35,21 +32,11 @@ ${content}`
             ;
 
         // LINE通知APIにPOST
-        const formData: any = { message: message };
-        if (imageThumbnail !== undefined) {
-            if (!validator.isURL(imageThumbnail)) {
-                throw new factory.errors.Argument('imageThumbnail', 'imageThumbnail should be URL');
-            }
-
-            formData.imageThumbnail = imageThumbnail;
-        }
-        if (imageFullsize !== undefined) {
-            if (!validator.isURL(imageFullsize)) {
-                throw new factory.errors.Argument('imageFullsize', 'imageFullsize should be URL');
-            }
-
-            formData.imageFullsize = imageFullsize;
-        }
+        const formData: any = {
+            message: message,
+            ...(typeof imageThumbnail === 'string') ? { imageThumbnail } : undefined,
+            ...(typeof imageFullsize === 'string') ? { imageFullsize } : undefined
+        };
 
         return new Promise<void>((resolve, reject) => {
             request.post(

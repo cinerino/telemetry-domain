@@ -1,35 +1,6 @@
 import * as mongoose from 'mongoose';
 
-import MultilingualStringSchemaType from '../schemaTypes/multilingualString';
-
 const safe = { j: true, w: 'majority', wtimeout: 10000 };
-
-const parentOrganizationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const locationSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
-
-const paymentAcceptedSchema = new mongoose.Schema(
-    {},
-    {
-        id: false,
-        _id: false,
-        strict: false
-    }
-);
 
 /**
  * 組織スキーマ
@@ -41,15 +12,15 @@ const schema = new mongoose.Schema(
             required: true
         },
         identifier: String,
-        name: MultilingualStringSchemaType,
-        legalName: MultilingualStringSchemaType,
+        name: mongoose.SchemaTypes.Mixed,
+        legalName: mongoose.SchemaTypes.Mixed,
         sameAs: String,
         url: String,
-        parentOrganization: parentOrganizationSchema,
+        parentOrganization: mongoose.SchemaTypes.Mixed,
         telephone: String,
-        location: locationSchema,
+        location: mongoose.SchemaTypes.Mixed,
         branchCode: String,
-        paymentAccepted: [paymentAcceptedSchema]
+        paymentAccepted: [mongoose.SchemaTypes.Mixed]
     },
     {
         collection: 'organizations',
@@ -89,13 +60,14 @@ schema.index(
     }
 );
 
-export default mongoose.model('Organization', schema).on(
-    'index',
-    // tslint:disable-next-line:no-single-line-block-comment
-    /* istanbul ignore next */
-    (error) => {
-        if (error !== undefined) {
-            console.error(error);
+export default mongoose.model('Organization', schema)
+    .on(
+        'index',
+        // tslint:disable-next-line:no-single-line-block-comment
+        /* istanbul ignore next */
+        (error) => {
+            if (error !== undefined) {
+                console.error(error);
+            }
         }
-    }
-);
+    );

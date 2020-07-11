@@ -32,14 +32,20 @@ export class MongoRepository {
         tranDateThrough: Date;
     }): Promise<GMO.factory.resultNotification.creditCard.IResultNotification[]> {
         // 'tranDate': '20170415230109'の形式
-        return <GMO.factory.resultNotification.creditCard.IResultNotification[]>await this.gmoNotificationModel.find(
+        return this.gmoNotificationModel.find(
             {
                 jobCd: GMO.utils.util.JobCd.Sales,
                 tranDate: {
-                    $gte: moment(searchConditions.tranDateFrom).tz('Asia/Tokyo').format('YYYYMMDDHHmmss'),
-                    $lte: moment(searchConditions.tranDateThrough).tz('Asia/Tokyo').format('YYYYMMDDHHmmss')
+                    $gte: moment(searchConditions.tranDateFrom)
+                        .tz('Asia/Tokyo')
+                        .format('YYYYMMDDHHmmss'),
+                    $lte: moment(searchConditions.tranDateThrough)
+                        .tz('Asia/Tokyo')
+                        .format('YYYYMMDDHHmmss')
                 }
             }
-        ).lean().exec();
+        )
+            .lean<GMO.factory.resultNotification.creditCard.IResultNotification>()
+            .exec();
     }
 }
