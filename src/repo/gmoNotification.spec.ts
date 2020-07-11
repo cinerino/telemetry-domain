@@ -3,6 +3,7 @@
  * gmoNotification repository test
  */
 import { } from 'mocha';
+import * as mongoose from 'mongoose';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -21,7 +22,7 @@ describe('constructor()', () => {
     });
 
     it('インスタンス生成できるはず', async () => {
-        const creativeWorkRepo = new domain.repository.GMONotification(domain.mongoose.connection);
+        const creativeWorkRepo = new domain.repository.GMONotification(mongoose.connection);
 
         assert.notEqual(creativeWorkRepo.gmoNotificationModel, undefined);
     });
@@ -34,7 +35,7 @@ describe('GMONotificationRepo.save()', () => {
 
     it('repositoryの状態が正常であれば、エラーにならないはず', async () => {
         const notification = {};
-        const gmoNotificationRepo = new domain.repository.GMONotification(domain.mongoose.connection);
+        const gmoNotificationRepo = new domain.repository.GMONotification(mongoose.connection);
 
         sandbox.mock(gmoNotificationRepo.gmoNotificationModel).expects('create').once().resolves();
 
@@ -52,7 +53,7 @@ describe('GMONotificationRepo.searchSales()', () => {
     it('repositoryの状態が正常であれば、配列を取得できるはず', async () => {
         const conditions = {};
         const notifications: any[] = [];
-        const gmoNotificationRepo = new domain.repository.GMONotification(domain.mongoose.connection);
+        const gmoNotificationRepo = new domain.repository.GMONotification(mongoose.connection);
 
         sandbox.mock(gmoNotificationRepo.gmoNotificationModel).expects('find').once()
             .chain('lean').chain('exec').resolves(notifications);

@@ -3,6 +3,7 @@
  * sendGridEvent repository test
  */
 import { } from 'mocha';
+import * as mongoose from 'mongoose';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -21,7 +22,7 @@ describe('constructor()', () => {
     });
 
     it('インスタンスを生成できるはず', async () => {
-        const repository = new domain.repository.SendGridEvent(domain.mongoose.connection);
+        const repository = new domain.repository.SendGridEvent(mongoose.connection);
 
         assert.notEqual(typeof repository.sendGridEventModel, undefined);
         sandbox.verify();

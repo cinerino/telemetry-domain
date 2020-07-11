@@ -3,6 +3,7 @@
  * telemetry repository test
  */
 import { } from 'mocha';
+import * as mongoose from 'mongoose';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -21,7 +22,7 @@ describe('constructor()', () => {
     });
 
     it('インスタンスを生成できるはず', async () => {
-        const repository = new domain.repository.Telemetry(domain.mongoose.connection);
+        const repository = new domain.repository.Telemetry(mongoose.connection);
 
         assert.notEqual(typeof repository.telemetryModel, undefined);
         sandbox.verify();

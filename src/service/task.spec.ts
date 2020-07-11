@@ -2,6 +2,7 @@
 /**
  * task service test
  */
+import * as mongoose from 'mongoose';
 import * as assert from 'power-assert';
 import * as sinon from 'sinon';
 import * as domain from '../index';
@@ -26,14 +27,14 @@ describe('executeByName()', () => {
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
         sandbox.mock(taskRepo).expects('executeOneByName').once().withArgs(task.name).resolves(task);
         sandbox.mock(AnalyzePlaceOrderTask).expects('call').once().withArgs(task.data).returns(async () => Promise.resolve());
         sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, domain.factory.taskStatus.Executed).resolves();
 
         const result = await domain.service.task.executeByName(task.name)({
             taskRepo: taskRepo,
-            connection: domain.mongoose.connection
+            connection: mongoose.connection
         });
 
         assert.equal(result, undefined);
@@ -42,14 +43,14 @@ describe('executeByName()', () => {
 
     it('未実行タスクが存在しなければ、実行されないはず', async () => {
         const taskName = <any>'analyzePlaceOrder';
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
 
         sandbox.mock(taskRepo).expects('executeOneByName').once().withArgs(taskName).resolves(null);
         sandbox.mock(domain.service.task).expects('execute').never();
 
         const result = await domain.service.task.executeByName(taskName)({
             taskRepo: taskRepo,
-            connection: domain.mongoose.connection
+            connection: mongoose.connection
         });
 
         assert.equal(result, undefined);
@@ -64,7 +65,7 @@ describe('retry()', () => {
 
     it('repositoryの状態が正常であれば、エラーにならないはず', async () => {
         const INTERVAL = 10;
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
 
         sandbox.mock(taskRepo).expects('retry').once()
             .withArgs(INTERVAL).resolves();
@@ -87,7 +88,7 @@ describe('abort()', () => {
             id: 'id',
             executionResults: [{ error: 'error' }]
         };
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
 
         sandbox.mock(taskRepo).expects('abortOne').once().withArgs(INTERVAL).resolves(task);
         // sandbox.mock(domain.service.notification).expects('report2developers').once()
@@ -112,14 +113,14 @@ describe('execute()', () => {
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
 
         sandbox.mock(AnalyzePlaceOrderTask).expects('call').once().withArgs(task.data).returns(async () => Promise.resolve());
         sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, domain.factory.taskStatus.Executed).resolves();
 
         const result = await domain.service.task.execute(<any>task)({
             taskRepo: taskRepo,
-            connection: domain.mongoose.connection
+            connection: mongoose.connection
         });
 
         assert.equal(result, undefined);
@@ -133,13 +134,13 @@ describe('execute()', () => {
             data: { datakey: 'dataValue' },
             status: domain.factory.taskStatus.Running
         };
-        const taskRepo = new domain.repository.Task(domain.mongoose.connection);
+        const taskRepo = new domain.repository.Task(mongoose.connection);
 
         sandbox.mock(taskRepo).expects('pushExecutionResultById').once().withArgs(task.id, task.status).resolves();
 
         const result = await domain.service.task.execute(<any>task)({
             taskRepo: taskRepo,
-            connection: domain.mongoose.connection
+            connection: mongoose.connection
         });
 
         assert.equal(result, undefined);
