@@ -87,12 +87,12 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
 
         const endDate = transaction.endDate;
         if (endDate === undefined) {
-            throw new factory.errors.Argument('transaction', 'Not ended yet');
+            // 進行中の取引であれば分析しない
+            return;
+            // throw new factory.errors.Argument('transaction', 'Not ended yet');
         }
 
-        const endedTransactions = [transaction];
-        debug(endedTransactions.length, 'endedTransactions found');
-        const confirmedTransactions = endedTransactions.filter((t) => t.status === factory.transactionStatusType.Confirmed);
+        const confirmedTransactions = [transaction].filter((t) => t.status === factory.transactionStatusType.Confirmed);
 
         // 金額集計
         const totalSalesAmount = confirmedTransactions.map((t) => (<factory.transaction.placeOrder.IResult>t.result).order.price)
