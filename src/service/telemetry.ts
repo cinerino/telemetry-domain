@@ -213,14 +213,19 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
             default:
         }
         debug('saving telemetry...', savingTelemetries);
-        await Promise.all(savingTelemetries.map(async (telemetry) => {
-            await addTelemetry({
-                project: transaction.project,
-                telemetryType: telemetry.typeOf,
-                measureDate: telemetry.measureDate,
-                value: telemetry.value
-            })(repos);
-        }));
+
+        try {
+            await Promise.all(savingTelemetries.map(async (telemetry) => {
+                await addTelemetry({
+                    project: transaction.project,
+                    telemetryType: telemetry.typeOf,
+                    measureDate: telemetry.measureDate,
+                    value: telemetry.value
+                })(repos);
+            }));
+        } catch (error) {
+            throw new Error(`${error.message}: ${JSON.stringify(savingTelemetries)}`);
+        }
     };
 }
 export interface ITelemetryValueAsObject { [key: string]: number; }
