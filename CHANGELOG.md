@@ -13,8 +13,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - 予約サービスを追加。
 - 汎用的な口座決済サービスを追加。
 - コードサービスを追加。
+- 通知リポジトリを追加
 
 ### Changed
+
+- @chevre/factoryで再構築
 
 ### Deprecated
 

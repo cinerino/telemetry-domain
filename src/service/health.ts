@@ -1,7 +1,7 @@
 /**
  * 健康診断サービス
  */
-import * as factory from '@cinerino/factory';
+import * as factory from '@chevre/factory';
 import * as GMO from '@motionpicture/gmo-service';
 import * as createDebug from 'debug';
 

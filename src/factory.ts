@@ -1,4 +1,4 @@
 /**
  * factory
  */
-export * from '@cinerino/factory';
+export * from '@chevre/factory';

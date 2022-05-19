@@ -99,7 +99,11 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
             .reduce((a, b) => a + b, 0);
         // 注文アイテム数
         const numOrderItems = confirmedTransactions
-            .map((t) => (<factory.transaction.placeOrder.IResult>t.result).order.acceptedOffers.length)
+            .map((t) => {
+                const numItems = t.result?.order.acceptedOffers?.length;
+
+                return (typeof numItems === 'number') ? numItems : 0;
+            })
             .reduce((a, b) => a + b, 0);
 
         const salesAmountByClient: ITelemetryValueAsObject = {};
@@ -118,7 +122,7 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
         confirmedTransactions.forEach((t) => {
             const order = (<factory.transaction.placeOrder.IResult>t.result).order;
             const amount = order.price;
-            const numItems = order.acceptedOffers.length;
+            const numItems = (typeof order.acceptedOffers?.length === 'number') ? order.acceptedOffers.length : 0;
 
             // クライアントごとの集計
             let clientId: string | undefined;
