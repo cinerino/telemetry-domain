@@ -10,7 +10,7 @@ export type Operation<T> = () => Promise<T>;
 
 /**
  * 開発者に報告する
- * @see https://notify-bot.line.me/doc/ja/
+ * @link https://notify-bot.line.me/doc/ja/
  */
 export function report2developers(subject: string, content: string, imageThumbnail?: string, imageFullsize?: string): Operation<void> {
     return async () => {
