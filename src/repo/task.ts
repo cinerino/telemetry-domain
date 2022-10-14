@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { Connection } from 'mongoose';
+import { Connection, Model } from 'mongoose';
 
 import * as factory from '../factory';
 import taskModel from './mongoose/model/task';
@@ -15,7 +15,7 @@ const sortOrder4executionOfTasks = {
  * タスクリポジトリ
  */
 export class MongoRepository {
-    public readonly taskModel: typeof taskModel;
+    public readonly taskModel: typeof Model;
     constructor(connection: Connection) {
         this.taskModel = connection.model(taskModel.modelName);
     }

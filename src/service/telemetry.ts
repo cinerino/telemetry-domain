@@ -332,7 +332,7 @@ export function search(params: {
                 .format('YYYY-MM-DDT00:00:00Z'))
                 .toDate()
         };
-        const telemetries = await repos.telemetry.telemetryModel.find({
+        const telemetries: ITelemetry[] = await repos.telemetry.telemetryModel.find({
             $and: [
                 { 'purpose.typeOf': { $exists: true, $eq: params.telemetryType } },
                 { 'object.projectId': { $exists: true, $eq: params.projectId } },

@@ -45,7 +45,7 @@ export class MongoRepository {
                 }
             }
         )
-            .lean<GMO.factory.resultNotification.creditCard.IResultNotification>()
+            .lean()
             .exec();
     }
 }
