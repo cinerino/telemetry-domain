@@ -7,7 +7,6 @@ import * as moment from 'moment';
 
 import * as factory from '../factory';
 
-// import { MongoRepository as ActionRepo } from '../../repo/action';
 import { MongoRepository as TaskRepo } from '../repo/task';
 import { MongoRepository as TelemetryRepo } from '../repo/telemetry';
 
@@ -61,24 +60,56 @@ export enum TelemetryType {
 export enum TelemetryScope {
     Global = 'Global'
 }
+export interface ITelemetryValueAsObject { [key: string]: number; }
+export type ITelemetryValue = number | ITelemetryValueAsObject;
+export interface ITelemetryValueByHours<T extends ITelemetryValue> {
+    numSamples: number;
+    totalSamples: T;
+    values: T[];
+}
+export interface ITelemetryResult<T extends ITelemetryValue> {
+    numSamples: number;
+    totalSamples: T;
+    values: ITelemetryValueByHours<T>[];
+}
 /**
  * 測定データインターフェース
  */
-export interface ITelemetry {
-    object: any;
-    result: any;
+export interface ITelemetry<T extends ITelemetryValue> {
+    object: {
+        measureDate: Date;
+        projectId: string;
+        scope: string;
+    };
+    result: ITelemetryResult<T>;
     startDate: Date;
     endDate: Date;
     purpose: {
         typeOf: TelemetryType;
     };
 }
+export type IAnalyzeParams = Pick<
+    factory.transaction.ITransaction<factory.transactionType.PlaceOrder>,
+    'id'
+    | 'typeOf'
+    | 'agent'
+    | 'endDate'
+    | 'expires'
+    // | 'object'
+    | 'project'
+    // | 'recipient'
+    | 'seller'
+    | 'result'
+    | 'startDate'
+    | 'status'
+>;
 /**
  * 注文取引データを分析する
  */
 // tslint:disable-next-line:no-single-line-block-comment
 /* istanbul ignore next */
-export function analyzePlaceOrder(params: factory.transaction.ITransaction<factory.transactionType.PlaceOrder>) {
+// パラメータ最適化(2023-01-01~)
+export function analyzePlaceOrder(params: IAnalyzeParams) {
     // tslint:disable-next-line:max-func-body-length
     return async (repos: {
         telemetry: TelemetryRepo;
@@ -220,7 +251,7 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
 
         try {
             await Promise.all(savingTelemetries.map(async (telemetry) => {
-                await addTelemetry({
+                await addTelemetry<typeof telemetry.value>({
                     project: transaction.project,
                     telemetryType: telemetry.typeOf,
                     measureDate: telemetry.measureDate,
@@ -232,13 +263,11 @@ export function analyzePlaceOrder(params: factory.transaction.ITransaction<facto
         }
     };
 }
-export interface ITelemetryValueAsObject { [key: string]: number; }
-export type ITelemetryValue = number | ITelemetryValueAsObject;
-function addTelemetry(params: {
+function addTelemetry<T extends ITelemetryValue>(params: {
     project: { id: string };
     telemetryType: TelemetryType;
     measureDate: Date;
-    value: ITelemetryValue;
+    value: T;
 }) {
     return async (repos: { telemetry: TelemetryRepo }) => {
         const telemetryMeasureDate = moment(moment(params.measureDate)
@@ -275,9 +304,9 @@ function addTelemetry(params: {
             const valueAsObject = params.value;
             Object.keys(valueAsObject)
                 .forEach((key) => {
-                    inc[`result.values.${hour}.values.${min}.${key}`] = valueAsObject[key];
-                    inc[`result.values.${hour}.totalSamples.${key}`] = valueAsObject[key];
-                    inc[`result.totalSamples.${key}`] = valueAsObject[key];
+                    inc[`result.values.${hour}.values.${min}.${key}`] = (<ITelemetryValueAsObject>valueAsObject)[key];
+                    inc[`result.values.${hour}.totalSamples.${key}`] = (<ITelemetryValueAsObject>valueAsObject)[key];
+                    inc[`result.totalSamples.${key}`] = (<ITelemetryValueAsObject>valueAsObject)[key];
                 });
         }
 
@@ -304,7 +333,11 @@ function addTelemetry(params: {
         debug('telemetry saved', params.telemetryType, params.measureDate);
     };
 }
-export function search(params: {
+export interface ISearchResult<T extends ITelemetryValue> {
+    measureDate: Date;
+    value: T;
+}
+export function search<T extends ITelemetryValue>(params: {
     projectId: string;
     telemetryType: string;
     measureFrom: Date;
@@ -313,7 +346,7 @@ export function search(params: {
 }) {
     return async (repos: {
         telemetry: TelemetryRepo;
-    }) => {
+    }): Promise<ISearchResult<T>[]> => {
         const measureFrom = moment(params.measureFrom);
         const measureThrough = moment(params.measureThrough);
         let resolution = '1day';
@@ -332,7 +365,7 @@ export function search(params: {
                 .format('YYYY-MM-DDT00:00:00Z'))
                 .toDate()
         };
-        const telemetries: ITelemetry[] = await repos.telemetry.telemetryModel.find({
+        const telemetries: ITelemetry<T>[] = await repos.telemetry.telemetryModel.find({
             $and: [
                 { 'purpose.typeOf': { $exists: true, $eq: params.telemetryType } },
                 { 'object.projectId': { $exists: true, $eq: params.projectId } },
@@ -344,7 +377,7 @@ export function search(params: {
             .sort({ 'object.measureDate': 1 })
             .exec()
             .then((docs) => docs.map((doc) => doc.toObject()));
-        const datas: any[] = [];
+        const datas: ISearchResult<T>[] = [];
         switch (resolution) {
             case '1hour':
                 telemetries.forEach((telemetry) => {
@@ -354,7 +387,7 @@ export function search(params: {
                                 measureDate: moment(telemetry.object.measureDate)
                                     .add(Number(h), 'hours')
                                     .toDate(),
-                                value: telemetry.result.values[h].totalSamples
+                                value: telemetry.result.values[Number(h)].totalSamples
                             });
                         });
                 });
@@ -363,14 +396,14 @@ export function search(params: {
                 telemetries.forEach((telemetry) => {
                     Object.keys(telemetry.result.values)
                         .forEach((h) => {
-                            Object.keys(telemetry.result.values[h].values)
+                            Object.keys(telemetry.result.values[Number(h)].values)
                                 .forEach((m) => {
                                     datas.push({
                                         measureDate: moment(telemetry.object.measureDate)
                                             .add(Number(h), 'hours')
                                             .add(Number(m), 'minutes')
                                             .toDate(),
-                                        value: telemetry.result.values[h].values[m]
+                                        value: telemetry.result.values[Number(h)].values[Number(m)]
                                     });
                                 });
                         });

@@ -9,7 +9,7 @@
     }
   ],
   "dependencies": {
-    "@chevre/factory": "4.270.0-alpha.0",
+    "@chevre/factory": "4.280.0-alpha.12",
     "@motionpicture/gmo-service": "5.2.0",
     "debug": "^3.2.6",
     "http-status": "^1.3.1",
