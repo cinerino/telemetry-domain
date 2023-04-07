@@ -37,7 +37,10 @@ describe('GMONotificationRepo.save()', () => {
         const notification = {};
         const gmoNotificationRepo = new domain.repository.GMONotification(mongoose.connection);
 
-        sandbox.mock(gmoNotificationRepo.gmoNotificationModel).expects('create').once().resolves();
+        sandbox.mock(gmoNotificationRepo.gmoNotificationModel)
+            .expects('create')
+            .once()
+            .resolves();
 
         const result = await gmoNotificationRepo.save(<any>notification);
         assert.equal(result, undefined);
@@ -55,8 +58,12 @@ describe('GMONotificationRepo.searchSales()', () => {
         const notifications: any[] = [];
         const gmoNotificationRepo = new domain.repository.GMONotification(mongoose.connection);
 
-        sandbox.mock(gmoNotificationRepo.gmoNotificationModel).expects('find').once()
-            .chain('lean').chain('exec').resolves(notifications);
+        sandbox.mock(gmoNotificationRepo.gmoNotificationModel)
+            .expects('find')
+            .once()
+            // .chain('lean')
+            .chain('exec')
+            .resolves(notifications);
 
         const result = await gmoNotificationRepo.searchSales(<any>conditions);
         assert(Array.isArray(result));

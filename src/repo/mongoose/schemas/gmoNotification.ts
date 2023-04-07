@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+import { writeConcern } from '../writeConcern';
+
+const modelName = 'GMONotification';
 
 /**
  * GMO通知スキーマ
@@ -31,7 +33,7 @@ const schema = new mongoose.Schema(
         collection: 'gmoNotifications',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         strict: true,
         useNestedStrict: true,
         timestamps: {
@@ -39,13 +41,13 @@ const schema = new mongoose.Schema(
             updatedAt: 'updatedAt'
         },
         toJSON: {
-            getters: true,
-            virtuals: true,
+            getters: false,
+            virtuals: false,
             minimize: false,
             versionKey: false
         },
         toObject: {
-            getters: true,
+            getters: false,
             virtuals: true,
             minimize: false,
             versionKey: false
@@ -56,14 +58,4 @@ const schema = new mongoose.Schema(
 // GMO売上健康診断時に使用
 schema.index({ jobCd: 1, tranDate: 1 });
 
-export default mongoose.model('GMONotification', schema)
-    .on(
-        'index',
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore next */
-        (error) => {
-            if (error !== undefined) {
-                console.error(error);
-            }
-        }
-    );
+export { modelName, schema };

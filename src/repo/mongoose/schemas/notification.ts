@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 
-const safe = { j: true, w: 'majority', wtimeout: 10000 };
+import { writeConcern } from '../writeConcern';
+
+const modelName = 'Notification';
 
 /**
  * 汎用通知スキーマ
@@ -11,7 +13,7 @@ const schema = new mongoose.Schema(
         collection: 'notifications',
         id: true,
         read: 'primaryPreferred',
-        safe: safe,
+        writeConcern: writeConcern,
         strict: false,
         useNestedStrict: true,
         timestamps: {
@@ -19,13 +21,13 @@ const schema = new mongoose.Schema(
             updatedAt: 'updatedAt'
         },
         toJSON: {
-            getters: true,
-            virtuals: true,
+            getters: false,
+            virtuals: false,
             minimize: false,
             versionKey: false
         },
         toObject: {
-            getters: true,
+            getters: false,
             virtuals: true,
             minimize: false,
             versionKey: false
@@ -33,14 +35,4 @@ const schema = new mongoose.Schema(
     }
 );
 
-export default mongoose.model('Notification', schema)
-    .on(
-        'index',
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore next */
-        (error) => {
-            if (error !== undefined) {
-                console.error(error);
-            }
-        }
-    );
+export { modelName, schema };

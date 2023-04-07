@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose';
 
-const modelName = 'Transaction';
+import { writeConcern } from '../writeConcern';
 
-const writeConcern: mongoose.WriteConcern = { j: true, w: 'majority', wtimeout: 10000 };
+const modelName = 'Transaction';
 
 /**
  * 取引スキーマ
@@ -42,18 +42,5 @@ const schema = new mongoose.Schema(
         }
     }
 );
-
-mongoose.model(modelName, schema)
-    .on(
-        'index',
-        // tslint:disable-next-line:no-single-line-block-comment
-        /* istanbul ignore next */
-        (error) => {
-            if (error !== undefined) {
-                // tslint:disable-next-line:no-console
-                console.error(error);
-            }
-        }
-    );
 
 export { modelName, schema };

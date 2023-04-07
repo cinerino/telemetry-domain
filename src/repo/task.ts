@@ -2,14 +2,14 @@ import * as moment from 'moment';
 import { Connection, Model } from 'mongoose';
 
 import * as factory from '../factory';
-import taskModel from './mongoose/model/task';
+import { modelName, schema } from './mongoose/schemas/task';
 
 /**
  * タスク実行時のソート条件
  */
 const sortOrder4executionOfTasks = {
-    numberOfTried: 1, // トライ回数の少なさ優先
-    runsAt: 1 // 実行予定日時の早さ優先
+    numberOfTried: factory.sortType.Ascending, // トライ回数の少なさ優先
+    runsAt: factory.sortType.Ascending // 実行予定日時の早さ優先
 };
 /**
  * タスクリポジトリ
@@ -17,9 +17,9 @@ const sortOrder4executionOfTasks = {
 export class MongoRepository {
     public readonly taskModel: typeof Model;
     constructor(connection: Connection) {
-        this.taskModel = connection.model(taskModel.modelName);
+        this.taskModel = connection.model(modelName, schema);
     }
-    public static CREATE_MONGO_CONDITIONS<T extends factory.taskName>(params: factory.task.ISearchConditions<T>) {
+    public static CREATE_MONGO_CONDITIONS(params: factory.task.ISearchConditions) {
         const andConditions: any[] = [{
             name: { $exists: true }
         }];
@@ -191,18 +191,18 @@ export class MongoRepository {
 
         return doc.toObject();
     }
-    public async count<T extends factory.taskName>(params: factory.task.ISearchConditions<T>): Promise<number> {
-        const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
+    // public async count(params: factory.task.ISearchConditions): Promise<number> {
+    //     const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
 
-        return this.taskModel.countDocuments({ $and: conditions })
-            .setOptions({ maxTimeMS: 10000 })
-            .exec();
-    }
+    //     return this.taskModel.countDocuments({ $and: conditions })
+    //         .setOptions({ maxTimeMS: 10000 })
+    //         .exec();
+    // }
     /**
      * 検索する
      */
     public async search<T extends factory.taskName>(
-        params: factory.task.ISearchConditions<T>
+        params: factory.task.ISearchConditions
     ): Promise<factory.task.ITask<T>[]> {
         const conditions = MongoRepository.CREATE_MONGO_CONDITIONS(params);
         const query = this.taskModel.find(
@@ -221,8 +221,8 @@ export class MongoRepository {
         }
         // tslint:disable-next-line:no-single-line-block-comment
         /* istanbul ignore else */
-        if (params.sort !== undefined) {
-            query.sort(params.sort);
+        if (typeof params.sort?.runsAt === 'number') {
+            query.sort({ runsAt: params.sort.runsAt });
         }
 
         return query.setOptions({ maxTimeMS: 10000 })
